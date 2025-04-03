@@ -4,11 +4,14 @@
   <meta charset="UTF-8" />
   <title>لعبة حروف تركي</title>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
       font-family: 'Arial', sans-serif;
       background: #eef0f2;
-      overflow: hidden;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
     }
 
     .falling-letters {
@@ -24,7 +27,7 @@
     .letter {
       position: absolute;
       font-size: 24px;
-      color: rgba(0, 0, 0, 0.08);
+      color: rgba(0, 0, 0, 0.07);
       animation: fall linear infinite;
     }
 
@@ -35,58 +38,70 @@
 
     h1 {
       text-align: center;
-      margin: 20px 0;
-      font-size: 28px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .grid {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
+      margin: 25px 0;
+      font-size: 26px;
       z-index: 1;
       position: relative;
     }
 
-    .row {
-      display: flex;
+    .hex-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 70px);
       gap: 6px;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
     }
 
-    .row.offset {
-      margin-right: 33px; /* يحرك الصف شوي */
-    }
-
-    .cell {
-      width: 60px;
-      height: 60px;
+    .hex {
+      width: 70px;
+      height: 70px;
       background: white;
       clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
       font-weight: bold;
+      font-size: 22px;
       color: black;
+      transition: 0.3s;
       cursor: pointer;
-      transition: background 0.3s;
     }
 
-    .cell.blue { background: #2196F3; color: white; }
-    .cell.red { background: #F44336; color: white; }
+    .hex:hover {
+      filter: brightness(0.95);
+    }
+
+    .hex.blue {
+      background: #2196F3;
+      color: white;
+    }
+
+    .hex.red {
+      background: #F44336;
+      color: white;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .row:nth-child(even) {
+      transform: translateX(35px); /* تعشيق */
+    }
 
     .question-box {
-      margin: 20px auto 10px;
-      width: 350px;
+      margin: 30px auto 10px;
+      width: 360px;
       background: white;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 15px;
       text-align: center;
-      z-index: 1;
-      position: relative;
       font-size: 18px;
+      position: relative;
+      z-index: 1;
     }
 
     input {
@@ -98,8 +113,12 @@
       text-align: center;
     }
 
+    #questionDisplay {
+      margin-top: 12px;
+    }
+
     button {
-      margin: 10px auto 30px;
+      margin: 20px auto 40px;
       display: block;
       padding: 12px 40px;
       background-color: orange;
@@ -119,44 +138,57 @@
 
   <h1>لعبة حروف تركي</h1>
 
-  <div class="grid">
-    <div class="row"><div class="cell">أ</div><div class="cell">ب</div><div class="cell">ت</div><div class="cell">ث</div><div class="cell">ج</div></div>
-    <div class="row offset"><div class="cell">ح</div><div class="cell">خ</div><div class="cell">د</div><div class="cell">ذ</div><div class="cell">ر</div></div>
-    <div class="row"><div class="cell">ز</div><div class="cell">س</div><div class="cell">ش</div><div class="cell">ص</div><div class="cell">ض</div></div>
-    <div class="row offset"><div class="cell">ط</div><div class="cell">ظ</div><div class="cell">ع</div><div class="cell">غ</div><div class="cell">ف</div></div>
-    <div class="row"><div class="cell">ق</div><div class="cell">ك</div><div class="cell">ل</div><div class="cell">م</div><div class="cell">ن</div></div>
-    <div class="row offset"><div class="cell">هـ</div><div class="cell">و</div><div class="cell">ي</div></div>
+  <div id="hex-container">
+    <!-- صفوف الخلايا -->
   </div>
 
   <div class="question-box">
     <input type="text" id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
-    <div id="questionDisplay" style="margin-top: 10px;">السؤال سيظهر هنا...</div>
+    <div id="questionDisplay">السؤال سيظهر هنا...</div>
   </div>
 
   <button>مبروك!</button>
 
   <script>
-    // تفاعل الألوان عند الضغط
-    document.querySelectorAll('.cell').forEach(cell => {
-      cell.onclick = () => {
-        if (cell.classList.contains("blue")) {
-          cell.classList.remove("blue");
-          cell.classList.add("red");
-        } else if (cell.classList.contains("red")) {
-          cell.classList.remove("red");
-        } else {
-          cell.classList.add("blue");
-        }
-      };
+    const rows = [
+      ["أ", "ب", "ت", "ث", "ج"],
+      ["ح", "خ", "د", "ذ", "ر"],
+      ["ز", "س", "ش", "ص", "ض"],
+      ["ط", "ظ", "ع", "غ", "ف"],
+      ["ق", "ك", "ل", "م", "ن"],
+      ["هـ", "و", "ي"]
+    ];
+
+    const container = document.getElementById("hex-container");
+
+    rows.forEach((rowLetters, i) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      rowLetters.forEach(letter => {
+        const hex = document.createElement("div");
+        hex.className = "hex";
+        hex.textContent = letter;
+        hex.onclick = () => {
+          if (hex.classList.contains("blue")) {
+            hex.classList.remove("blue");
+            hex.classList.add("red");
+          } else if (hex.classList.contains("red")) {
+            hex.classList.remove("red");
+          } else {
+            hex.classList.add("blue");
+          }
+        };
+        row.appendChild(hex);
+      });
+      container.appendChild(row);
     });
 
-    // تحديث السؤال
     function updateQuestion() {
       const input = document.getElementById("questionInput").value;
       document.getElementById("questionDisplay").innerText = "السؤال: " + input;
     }
 
-    // الخلفية المتساقطة
+    // حروف الخلفية المتساقطة
     const falling = document.getElementById("falling");
     const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي";
 

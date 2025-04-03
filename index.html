@@ -5,6 +5,7 @@
   <title>لعبة حروف تركي</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Arial', sans-serif;
       background: #eef0f2;
@@ -21,41 +22,33 @@
       z-index: 1;
     }
 
-    .hex-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      position: relative;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 70px);
+      gap: 6px;
+      justify-content: center;
+      margin: 10px auto;
       z-index: 1;
+      position: relative;
     }
 
-    .row {
-      display: flex;
-      gap: 5px;
-    }
-
-    .row:nth-child(even) {
-      transform: translateX(35px);
-    }
-
-    .hex {
+    .cell {
       width: 70px;
       height: 70px;
       background: white;
-      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      border-radius: 6px;
+      font-size: 22px;
+      font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
-      font-size: 22px;
       color: black;
-      transition: 0.3s;
       cursor: pointer;
+      transition: 0.3s;
     }
 
-    .hex.blue { background: #2196F3; color: white; }
-    .hex.red { background: #F44336; color: white; }
+    .cell.blue { background: #2196F3; color: white; }
+    .cell.red { background: #F44336; color: white; }
 
     .question-box {
       margin: 30px auto 10px;
@@ -106,7 +99,6 @@
       cursor: not-allowed;
     }
 
-    /* الحروف المتساقطة */
     .falling-letters {
       position: fixed;
       top: 0;
@@ -119,9 +111,9 @@
 
     .letter {
       position: absolute;
-      font-size: 30px;
+      font-size: 32px;
       font-weight: bold;
-      color: rgba(0, 0, 0, 0.12);
+      color: rgba(0, 0, 0, 0.1);
       animation: fall linear infinite;
     }
 
@@ -130,7 +122,6 @@
       100% { transform: translateY(100vh); opacity: 1; }
     }
 
-    /* الألعاب النارية والنص */
     .celebration {
       position: fixed;
       top: 30%;
@@ -156,7 +147,7 @@
 
   <h1>لعبة حروف تركي</h1>
 
-  <div class="hex-container" id="hex-container"></div>
+  <div class="grid" id="grid"></div>
 
   <div class="question-box">
     <input type="text" id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
@@ -171,48 +162,8 @@
   <script>
     const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split('');
     let letters = [];
-    let hexes = [];
-    const rowsCount = 5;
-    const columnsCount = 5;
-    const container = document.getElementById("hex-container");
-
-    function renderGrid() {
-      container.innerHTML = '';
-      hexes = [];
-
-      let index = 0;
-      for (let r = 0; r < rowsCount; r++) {
-        const rowDiv = document.createElement("div");
-        rowDiv.className = "row";
-        if (r % 2 === 1) rowDiv.classList.add("offset");
-
-        for (let c = 0; c < columnsCount; c++) {
-          const hex = document.createElement("div");
-          hex.className = "hex";
-          hex.textContent = letters[index];
-          hex.dataset.row = r;
-          hex.dataset.col = c;
-
-          hex.onclick = () => {
-            if (hex.classList.contains("blue")) {
-              hex.classList.remove("blue");
-              hex.classList.add("red");
-            } else if (hex.classList.contains("red")) {
-              hex.classList.remove("red");
-            } else {
-              hex.classList.add("blue");
-            }
-            checkWinner();
-          };
-
-          rowDiv.appendChild(hex);
-          hexes.push(hex);
-          index++;
-        }
-
-        container.appendChild(rowDiv);
-      }
-    }
+    let cells = [];
+    const gridEl = document.getElementById("grid");
 
     function updateQuestion() {
       const input = document.getElementById("questionInput").value;
@@ -230,46 +181,63 @@
       checkWinner();
     }
 
+    function renderGrid() {
+      gridEl.innerHTML = '';
+      cells = [];
+
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = letters[i];
+        cell.dataset.row = Math.floor(i / 5);
+        cell.dataset.col = i % 5;
+
+        cell.onclick = () => {
+          if (cell.classList.contains("blue")) {
+            cell.classList.remove("blue");
+            cell.classList.add("red");
+          } else if (cell.classList.contains("red")) {
+            cell.classList.remove("red");
+          } else {
+            cell.classList.add("blue");
+          }
+          checkWinner();
+        };
+
+        cells.push(cell);
+        gridEl.appendChild(cell);
+      }
+    }
+
     function checkWinner() {
-      const grid = Array.from({ length: rowsCount }, () => Array(columnsCount).fill(null));
-      hexes.forEach(hex => {
-        const r = parseInt(hex.dataset.row);
-        const c = parseInt(hex.dataset.col);
-        grid[r][c] = hex;
+      const winButton = document.getElementById("winButton");
+      let grid = Array.from({ length: 5 }, () => Array(5).fill(null));
+
+      cells.forEach(cell => {
+        const r = parseInt(cell.dataset.row);
+        const c = parseInt(cell.dataset.col);
+        grid[r][c] = cell;
       });
 
       let win = false;
 
-      // تحقق أفقي
-      for (let r = 0; r < rowsCount; r++) {
+      // أفقي
+      for (let r = 0; r < 5; r++) {
         const row = grid[r];
-        const color = row[0] && (row[0].classList.contains('blue') ? 'blue' :
-                                 row[0].classList.contains('red') ? 'red' : null);
-        if (color && row.every(cell => cell && cell.classList.contains(color))) win = true;
+        const color = row[0] && (row[0].classList.contains("blue") ? "blue" :
+                                 row[0].classList.contains("red") ? "red" : null);
+        if (color && row.every(c => c.classList.contains(color))) win = true;
       }
 
-      // تحقق عمودي
-      for (let c = 0; c < columnsCount; c++) {
-        const col = [];
-        for (let r = 0; r < rowsCount; r++) {
-          col.push(grid[r][c]);
-        }
-        const color = col[0] && (col[0].classList.contains('blue') ? 'blue' :
-                                 col[0].classList.contains('red') ? 'red' : null);
-        if (color && col.every(cell => cell && cell.classList.contains(color))) win = true;
+      // عمودي
+      for (let c = 0; c < 5; c++) {
+        const col = grid.map(row => row[c]);
+        const color = col[0] && (col[0].classList.contains("blue") ? "blue" :
+                                 col[0].classList.contains("red") ? "red" : null);
+        if (color && col.every(c => c.classList.contains(color))) win = true;
       }
 
-      document.getElementById("winButton").disabled = !win;
-    }
-
-    function createFallingLetter() {
-      const span = document.createElement("span");
-      span.classList.add("letter");
-      span.style.left = Math.random() * 100 + "vw";
-      span.style.animationDuration = (3 + Math.random() * 5) + "s";
-      span.textContent = arabicLetters[Math.floor(Math.random() * arabicLetters.length)];
-      document.getElementById("falling").appendChild(span);
-      setTimeout(() => span.remove(), 8000);
+      winButton.disabled = !win;
     }
 
     function celebrate() {
@@ -285,7 +253,7 @@
         spark.style.left = (Math.random() * 100) + 'vw';
         spark.style.width = '10px';
         spark.style.height = '10px';
-        spark.style.background = ['red', 'yellow', 'orange'][Math.floor(Math.random()*3)];
+        spark.style.background = ['red', 'yellow', 'orange'][Math.floor(Math.random() * 3)];
         spark.style.borderRadius = '50%';
         spark.style.zIndex = 999;
         spark.style.opacity = 0.8;
@@ -298,8 +266,18 @@
       setTimeout(() => message.remove(), 3000);
     }
 
+    function createFallingLetter() {
+      const span = document.createElement("span");
+      span.classList.add("letter");
+      span.style.left = Math.random() * 100 + "vw";
+      span.style.animationDuration = (3 + Math.random() * 5) + "s";
+      span.textContent = arabicLetters[Math.floor(Math.random() * arabicLetters.length)];
+      document.getElementById("falling").appendChild(span);
+      setTimeout(() => span.remove(), 8000);
+    }
+
     setInterval(createFallingLetter, 300);
-    shuffleLetters(); // أول تشغيل
+    shuffleLetters();
   </script>
 
 </body>

@@ -7,14 +7,23 @@
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      background-color: #f5f5f5;
+      margin: 0;
+      background: linear-gradient(-45deg, #1e1e2f, #2c3e50, #34495e, #223);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
+      color: white;
       text-align: center;
-      direction: rtl;
+    }
+
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
 
     h1 {
       margin-top: 20px;
-      color: #2d2d2d;
+      font-size: 28px;
     }
 
     .question-input {
@@ -24,40 +33,54 @@
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 6px;
+      color: #333;
     }
 
     .grid {
-      display: grid;
-      grid-template-columns: repeat(6, 50px);
-      gap: 10px;
+      display: flex;
+      flex-wrap: wrap;
       justify-content: center;
+      max-width: 350px;
       margin: 30px auto;
+      gap: 10px;
     }
 
     .cell {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      color: #000;
+      clip-path: polygon(
+        50% 0%, 93% 25%, 93% 75%,
+        50% 100%, 7% 75%, 7% 25%
+      );
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      user-select: none;
+      color: white;
+      background-color: #444;
     }
 
-    .cell.yellow { background-color: #ffeb3b; }
-    .cell.green { background-color: #8bc34a; }
-    .cell.orange { background-color: #ff9800; }
+    .cell.blue {
+      background-color: #2196F3;
+    }
+
+    .cell.red {
+      background-color: #F44336;
+    }
 
     .question-box {
       margin: 20px auto;
       padding: 10px;
       width: 350px;
-      background-color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.9);
       border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      color: #000;
       font-size: 18px;
     }
 
@@ -79,35 +102,8 @@
 
   <input type="text" id="questionInput" class="question-input" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
 
-  <div class="grid">
-    <div class="cell green">أ</div>
-    <div class="cell yellow">ب</div>
-    <div class="cell orange">ت</div>
-    <div class="cell">ث</div>
-    <div class="cell">ج</div>
-    <div class="cell">ح</div>
-    <div class="cell">خ</div>
-    <div class="cell">د</div>
-    <div class="cell">ذ</div>
-    <div class="cell">ر</div>
-    <div class="cell">ز</div>
-    <div class="cell">س</div>
-    <div class="cell">ش</div>
-    <div class="cell">ص</div>
-    <div class="cell">ض</div>
-    <div class="cell">ط</div>
-    <div class="cell">ظ</div>
-    <div class="cell">ع</div>
-    <div class="cell">غ</div>
-    <div class="cell">ف</div>
-    <div class="cell">ق</div>
-    <div class="cell">ك</div>
-    <div class="cell">ل</div>
-    <div class="cell">م</div>
-    <div class="cell">ن</div>
-    <div class="cell">هـ</div>
-    <div class="cell">و</div>
-    <div class="cell">ي</div>
+  <div class="grid" id="grid">
+    <!-- الحروف -->
   </div>
 
   <div class="question-box" id="questionDisplay">
@@ -117,6 +113,31 @@
   <button class="button">مبروك!</button>
 
   <script>
+    const letters = [
+      "أ","ب","ت","ث","ج","ح","خ","د","ذ",
+      "ر","ز","س","ش","ص","ض","ط","ظ","ع",
+      "غ","ف","ق","ك","ل","م","ن","هـ","و","ي"
+    ];
+
+    const grid = document.getElementById("grid");
+
+    letters.forEach(letter => {
+      const div = document.createElement("div");
+      div.classList.add("cell");
+      div.textContent = letter;
+      div.onclick = () => {
+        if (div.classList.contains("blue")) {
+          div.classList.remove("blue");
+          div.classList.add("red");
+        } else if (div.classList.contains("red")) {
+          div.classList.remove("red");
+        } else {
+          div.classList.add("blue");
+        }
+      };
+      grid.appendChild(div);
+    });
+
     function updateQuestion() {
       const input = document.getElementById("questionInput").value;
       document.getElementById("questionDisplay").innerText = "السؤال: " + input;
@@ -124,4 +145,4 @@
   </script>
 
 </body>
-</html>    
+</html>

@@ -2,115 +2,137 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لعبة حروف تركي</title>
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      background: linear-gradient(-45deg, #1e1e2f, #2c3e50, #34495e, #223);
-      background-size: 400% 400%;
-      animation: gradientBG 10s ease infinite;
-      color: white;
-      text-align: center;
+    * {
+      box-sizing: border-box;
     }
 
-    @keyframes gradientBG {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      position: relative;
+      background: #eef0f2;
+    }
+
+    /* الخلفية: حروف عربية تتساقط */
+    .falling-letters {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .letter {
+      position: absolute;
+      font-size: 24px;
+      color: rgba(0, 0, 0, 0.08);
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(100vh);
+        opacity: 1;
+      }
     }
 
     h1 {
-      margin-top: 20px;
-      font-size: 28px;
-    }
-
-    .question-input {
-      margin: 20px auto;
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      color: #333;
+      text-align: center;
+      margin: 20px 0;
+      z-index: 1;
+      position: relative;
     }
 
     .grid {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(6, 60px);
+      gap: 6px;
       justify-content: center;
-      max-width: 350px;
-      margin: 30px auto;
-      gap: 10px;
+      padding: 20px;
+      z-index: 1;
+      position: relative;
     }
 
     .cell {
       width: 60px;
       height: 60px;
-      background-color: #ffffff;
-      color: #000;
-      clip-path: polygon(
-        50% 0%, 93% 25%, 93% 75%,
-        50% 100%, 7% 75%, 7% 25%
-      );
+      background: white;
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
+      color: black;
       cursor: pointer;
-      transition: background-color 0.3s;
-      user-select: none;
-      color: white;
-      background-color: #444;
+      transition: background 0.3s;
     }
 
     .cell.blue {
-      background-color: #2196F3;
+      background: #2196F3;
+      color: white;
     }
 
     .cell.red {
-      background-color: #F44336;
+      background: #F44336;
+      color: white;
     }
 
     .question-box {
-      margin: 20px auto;
+      margin: 10px auto;
+      width: 300px;
+      background: white;
+      border-radius: 8px;
       padding: 10px;
-      width: 350px;
-      background-color: rgba(255, 255, 255, 0.9);
-      border-radius: 10px;
-      color: #000;
-      font-size: 18px;
+      text-align: center;
+      z-index: 1;
+      position: relative;
     }
 
-    .button {
-      margin-top: 20px;
+    input {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    button {
+      margin-top: 15px;
       padding: 10px 30px;
       background-color: orange;
       color: white;
-      font-size: 18px;
       border: none;
       border-radius: 20px;
+      font-size: 16px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
 
+  <div class="falling-letters" id="falling"></div>
+
   <h1>لعبة حروف تركي</h1>
 
-  <input type="text" id="questionInput" class="question-input" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
+  <div class="grid" id="grid"></div>
 
-  <div class="grid" id="grid">
-    <!-- الحروف -->
+  <div class="question-box">
+    <input type="text" id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
+    <div id="questionDisplay">السؤال سيظهر هنا...</div>
   </div>
 
-  <div class="question-box" id="questionDisplay">
-    السؤال سيظهر هنا...
-  </div>
-
-  <button class="button">مبروك!</button>
+  <button>مبروك!</button>
 
   <script>
     const letters = [
@@ -122,26 +144,45 @@
     const grid = document.getElementById("grid");
 
     letters.forEach(letter => {
-      const div = document.createElement("div");
-      div.classList.add("cell");
-      div.textContent = letter;
-      div.onclick = () => {
-        if (div.classList.contains("blue")) {
-          div.classList.remove("blue");
-          div.classList.add("red");
-        } else if (div.classList.contains("red")) {
-          div.classList.remove("red");
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.textContent = letter;
+
+      cell.onclick = () => {
+        if (cell.classList.contains("blue")) {
+          cell.classList.remove("blue");
+          cell.classList.add("red");
+        } else if (cell.classList.contains("red")) {
+          cell.classList.remove("red");
         } else {
-          div.classList.add("blue");
+          cell.classList.add("blue");
         }
       };
-      grid.appendChild(div);
+
+      grid.appendChild(cell);
     });
 
     function updateQuestion() {
       const input = document.getElementById("questionInput").value;
       document.getElementById("questionDisplay").innerText = "السؤال: " + input;
     }
+
+    // توليد الحروف المتساقطة
+    const falling = document.getElementById("falling");
+    const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي";
+
+    function createFallingLetter() {
+      const span = document.createElement("span");
+      span.classList.add("letter");
+      span.style.left = Math.random() * 100 + "vw";
+      span.style.animationDuration = (3 + Math.random() * 5) + "s";
+      span.textContent = arabicLetters[Math.floor(Math.random() * arabicLetters.length)];
+      falling.appendChild(span);
+
+      setTimeout(() => span.remove(), 8000);
+    }
+
+    setInterval(createFallingLetter, 300);
   </script>
 
 </body>

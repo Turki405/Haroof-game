@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لعبة حروف تركي</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+      direction: rtl;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #2d2d2d;
+    }
+
+    .question-input {
+      margin: 20px auto;
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 50px);
+      gap: 10px;
+      justify-content: center;
+      margin: 30px auto;
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .cell.yellow { background-color: #ffeb3b; }
+    .cell.green { background-color: #8bc34a; }
+    .cell.orange { background-color: #ff9800; }
+
+    .question-box {
+      margin: 20px auto;
+      padding: 10px;
+      width: 350px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      font-size: 18px;
+    }
+
+    .button {
+      margin-top: 20px;
+      padding: 10px 30px;
+      background-color: orange;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>لعبة حروف تركي</h1>
+
+  <input type="text" id="questionInput" class="question-input" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
+
+  <div class="grid">
+    <div class="cell green">أ</div>
+    <div class="cell yellow">ب</div>
+    <div class="cell orange">ت</div>
+    <div class="cell">ث</div>
+    <div class="cell">ج</div>
+    <div class="cell">ح</div>
+    <div class="cell">خ</div>
+    <div class="cell">د</div>
+    <div class="cell">ذ</div>
+    <div class="cell">ر</div>
+    <div class="cell">ز</div>
+    <div class="cell">س</div>
+    <div class="cell">ش</div>
+    <div class="cell">ص</div>
+    <div class="cell">ض</div>
+    <div class="cell">ط</div>
+    <div class="cell">ظ</div>
+    <div class="cell">ع</div>
+    <div class="cell">غ</div>
+    <div class="cell">ف</div>
+    <div class="cell">ق</div>
+    <div class="cell">ك</div>
+    <div class="cell">ل</div>
+    <div class="cell">م</div>
+    <div class="cell">ن</div>
+    <div class="cell">هـ</div>
+    <div class="cell">و</div>
+    <div class="cell">ي</div>
+  </div>
+
+  <div class="question-box" id="questionDisplay">
+    السؤال سيظهر هنا...
+  </div>
+
+  <button class="button">مبروك!</button>
+
+  <script>
+    function updateQuestion() {
+      const input = document.getElementById("questionInput").value;
+      document.getElementById("questionDisplay").innerText = "السؤال: " + input;
+    }
+  </script>
+
+</body>
+</html>    

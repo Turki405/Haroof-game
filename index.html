@@ -4,10 +4,6 @@
   <meta charset="UTF-8" />
   <title>لعبة حروف تركي</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
       font-family: 'Arial', sans-serif;
@@ -47,13 +43,20 @@
 
     .grid {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 400px;
-      margin: auto;
-      gap: 6px;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
       z-index: 1;
       position: relative;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .row.offset {
+      margin-right: 33px; /* يحرك الصف شوي */
     }
 
     .cell {
@@ -116,7 +119,14 @@
 
   <h1>لعبة حروف تركي</h1>
 
-  <div class="grid" id="grid"></div>
+  <div class="grid">
+    <div class="row"><div class="cell">أ</div><div class="cell">ب</div><div class="cell">ت</div><div class="cell">ث</div><div class="cell">ج</div></div>
+    <div class="row offset"><div class="cell">ح</div><div class="cell">خ</div><div class="cell">د</div><div class="cell">ذ</div><div class="cell">ر</div></div>
+    <div class="row"><div class="cell">ز</div><div class="cell">س</div><div class="cell">ش</div><div class="cell">ص</div><div class="cell">ض</div></div>
+    <div class="row offset"><div class="cell">ط</div><div class="cell">ظ</div><div class="cell">ع</div><div class="cell">غ</div><div class="cell">ف</div></div>
+    <div class="row"><div class="cell">ق</div><div class="cell">ك</div><div class="cell">ل</div><div class="cell">م</div><div class="cell">ن</div></div>
+    <div class="row offset"><div class="cell">هـ</div><div class="cell">و</div><div class="cell">ي</div></div>
+  </div>
 
   <div class="question-box">
     <input type="text" id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
@@ -126,24 +136,8 @@
   <button>مبروك!</button>
 
   <script>
-    const letters = [
-      "أ","ب","ت","ث","ج","ح","خ","د","ذ",
-      "ر","ز","س","ش","ص","ض","ط","ظ","ع",
-      "غ","ف","ق","ك","ل","م","ن","هـ","و","ي"
-    ];
-
-    const grid = document.getElementById("grid");
-
-    letters.forEach((letter, index) => {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.textContent = letter;
-
-      // خليه يتزحلق نص الخلايا (صفوف متداخلة)
-      if (Math.floor(index / 6) % 2 !== 0) {
-        cell.style.marginRight = "30px";
-      }
-
+    // تفاعل الألوان عند الضغط
+    document.querySelectorAll('.cell').forEach(cell => {
       cell.onclick = () => {
         if (cell.classList.contains("blue")) {
           cell.classList.remove("blue");
@@ -154,16 +148,15 @@
           cell.classList.add("blue");
         }
       };
-
-      grid.appendChild(cell);
     });
 
+    // تحديث السؤال
     function updateQuestion() {
       const input = document.getElementById("questionInput").value;
       document.getElementById("questionDisplay").innerText = "السؤال: " + input;
     }
 
-    // الحروف المتساقطة في الخلفية
+    // الخلفية المتساقطة
     const falling = document.getElementById("falling");
     const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي";
 
@@ -174,7 +167,6 @@
       span.style.animationDuration = (3 + Math.random() * 5) + "s";
       span.textContent = arabicLetters[Math.floor(Math.random() * arabicLetters.length)];
       falling.appendChild(span);
-
       setTimeout(() => span.remove(), 8000);
     }
 

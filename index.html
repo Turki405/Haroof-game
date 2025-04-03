@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>لعبة حروف تركي</title>
   <style>
     * {
@@ -11,12 +11,10 @@
     body {
       margin: 0;
       font-family: 'Arial', sans-serif;
-      overflow: hidden;
-      position: relative;
       background: #eef0f2;
+      overflow: hidden;
     }
 
-    /* الخلفية: حروف عربية تتساقط */
     .falling-letters {
       position: fixed;
       top: 0;
@@ -35,29 +33,25 @@
     }
 
     @keyframes fall {
-      0% {
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(100vh);
-        opacity: 1;
-      }
+      0% { transform: translateY(-50px); opacity: 0; }
+      100% { transform: translateY(100vh); opacity: 1; }
     }
 
     h1 {
       text-align: center;
       margin: 20px 0;
-      z-index: 1;
+      font-size: 28px;
       position: relative;
+      z-index: 1;
     }
 
     .grid {
-      display: grid;
-      grid-template-columns: repeat(6, 60px);
-      gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
       justify-content: center;
-      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      gap: 6px;
       z-index: 1;
       position: relative;
     }
@@ -77,45 +71,42 @@
       transition: background 0.3s;
     }
 
-    .cell.blue {
-      background: #2196F3;
-      color: white;
-    }
-
-    .cell.red {
-      background: #F44336;
-      color: white;
-    }
+    .cell.blue { background: #2196F3; color: white; }
+    .cell.red { background: #F44336; color: white; }
 
     .question-box {
-      margin: 10px auto;
-      width: 300px;
+      margin: 20px auto 10px;
+      width: 350px;
       background: white;
       border-radius: 8px;
-      padding: 10px;
+      padding: 15px;
       text-align: center;
       z-index: 1;
       position: relative;
+      font-size: 18px;
     }
 
     input {
       width: 100%;
-      padding: 8px;
-      font-size: 16px;
+      padding: 12px;
+      font-size: 18px;
       border: 1px solid #ccc;
       border-radius: 6px;
       text-align: center;
     }
 
     button {
-      margin-top: 15px;
-      padding: 10px 30px;
+      margin: 10px auto 30px;
+      display: block;
+      padding: 12px 40px;
       background-color: orange;
       color: white;
       border: none;
-      border-radius: 20px;
-      font-size: 16px;
+      border-radius: 25px;
+      font-size: 18px;
       cursor: pointer;
+      z-index: 1;
+      position: relative;
     }
   </style>
 </head>
@@ -129,7 +120,7 @@
 
   <div class="question-box">
     <input type="text" id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
-    <div id="questionDisplay">السؤال سيظهر هنا...</div>
+    <div id="questionDisplay" style="margin-top: 10px;">السؤال سيظهر هنا...</div>
   </div>
 
   <button>مبروك!</button>
@@ -143,10 +134,15 @@
 
     const grid = document.getElementById("grid");
 
-    letters.forEach(letter => {
+    letters.forEach((letter, index) => {
       const cell = document.createElement("div");
       cell.className = "cell";
       cell.textContent = letter;
+
+      // خليه يتزحلق نص الخلايا (صفوف متداخلة)
+      if (Math.floor(index / 6) % 2 !== 0) {
+        cell.style.marginRight = "30px";
+      }
 
       cell.onclick = () => {
         if (cell.classList.contains("blue")) {
@@ -167,7 +163,7 @@
       document.getElementById("questionDisplay").innerText = "السؤال: " + input;
     }
 
-    // توليد الحروف المتساقطة
+    // الحروف المتساقطة في الخلفية
     const falling = document.getElementById("falling");
     const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي";
 

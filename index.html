@@ -3,209 +3,121 @@
 <head>
 <meta charset="UTF-8" />
 <title>لعبة حروف تركي</title>
+
 <style>
+/* إعدادات سريعة – عدّل الأرقام لو تبغى حجم أو سماكة مختلفة */
 :root{
-  --hex-size: 85px;      /* عرض الخلية – عدّل إذا تبغى */
-  --gap: 8px;            /* المسافة بين الخلايا */
-  --blue:#2196F3;
-  --red:#F44336;
+  --hex: 90;        /* عرض الخلية بالبيكسل            */
+  --gap: 6;         /* المسافة بين الخلايا             */
+  --stroke: 2;      /* سماكة الحدود السوداء            */
+  --blue:#2196F3;   /* لون الفريق الأزرق              */
+  --red:#F44336;    /* لون الفريق الأحمر             */
 }
 
-/* reset */
+/* reset عام */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:Arial, sans-serif;
   background:#eef0f2;
   min-height:100vh;
-  overflow-x:hidden;
   display:flex;
   flex-direction:column;
   align-items:center;
 }
+h1{margin:24px 0;font-size:34px}
 
-h1{margin:25px 0;font-size:34px}
-
-/* ---------- الشبكة ---------- */
-.hex-grid{
+/* ------------ شبكة خلايا النحل ------------ */
+.board{
   display:flex;
   flex-direction:column;
-  gap:var(--gap);
-  background:#fff;              /* يغطي الفراغات */
-  padding:var(--gap);           /* يبعدها عن الحواف */
-  border-radius:10px;
+  gap:calc(var(--gap)*1px);
 }
-.hex-row{display:flex;gap:var(--gap)}
-.hex-row.offset{transform:translateX(calc(var(--hex-size)/2 + var(--gap)/2))}
+.row{
+  display:flex;
+  gap:calc(var(--gap)*1px);
+}
+.row.offset{
+  /* إزاحة نصف خلية لإيجاد التعشيق */
+  margin-inline-start:calc(var(--hex)*0.5px + var(--gap)*0.5px);
+}
 
-/* ---------- الخلية ---------- */
+/* ------------ الخلية الفردية ------------ */
 .hex{
-  width:var(--hex-size);
-  height:calc(var(--hex-size)*0.866);
-  display:flex;align-items:center;justify-content:center;
-  font:bold 24px/1 Arial;
-  background:#fff;color:#000;
-  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
-  border:2px solid #000;
+  width:calc(var(--hex)*1px);
+  aspect-ratio: 1.154;          /* يناسب 100 × 86  (Flat-Top) */
+  position:relative;
   cursor:pointer;
-  transition:background .2s,border .2s;
-  user-select:none;
 }
-.hex.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
-.hex.red {background:var(--red); color:#fff;border-color:var(--red)}
-.hex:active{transform:scale(.95)}
+.hex svg{width:100%;height:100%}
+.hex text{
+  dominant-baseline:middle;
+  text-anchor:middle;
+  font:700 calc(var(--hex)*0.38px)/1 Arial;
+  pointer-events:none;
+}
 
-/* ---------- السؤال ---------- */
-.question-box{
-  margin:30px auto 10px;width:360px;background:#fff;border-radius:10px;
-  padding:15px;text-align:center;font-size:18px
-}
-.question-box input{
-  width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:6px;text-align:center
-}
-#questionDisplay{margin-top:12px}
-
-/* ---------- الأزرار ---------- */
-.button-box{display:flex;gap:18px;margin:20px auto 40px}
-.button-box button{
-  padding:12px 28px;border:none;border-radius:26px;font-size:16px;
-  color:#fff;background:#ff9800;cursor:pointer;transition:opacity .2s
-}
-.button-box button:disabled{opacity:.5;cursor:not-allowed}
-
-/* ---------- المطر ---------- */
-.falling-letters{position:fixed;inset:0;pointer-events:none;z-index:-1}
-.letter{
-  position:absolute;font-size:32px;font-weight:bold;color:rgba(0,0,0,.08);
-  animation:fall linear infinite
-}
-@keyframes fall{0%{transform:translateY(-50px);opacity:0}100%{transform:translateY(100vh);opacity:1}}
-
-/* ---------- الاحتفال ---------- */
-.celebration{
-  position:fixed;top:30%;width:100%;text-align:center;
-  font-size:36px;font-weight:bold;color:gold;
-  animation:celebrate 3s ease-out forwards
-}
-@keyframes celebrate{
-  0%{transform:translateY(0);opacity:0}
-  50%{opacity:1}
-  100%{transform:translateY(-120px);opacity:0}
-}
+/* ألوان الفرق */
+.hex.blue .poly{fill:var(--blue);stroke:var(--blue)}
+.hex.red  .poly{fill:var(--red); stroke:var(--red)}
+.hex:active{transform:scale(.94)}
 </style>
 </head>
+
 <body>
-
-<div class="falling-letters" id="falling"></div>
 <h1>لعبة حروف تركي</h1>
-
-<div id="grid" class="hex-grid"></div>
-
-<div class="question-box">
-  <input id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
-  <div id="questionDisplay">السؤال سيظهر هنا...</div>
-</div>
-
-<div class="button-box">
-  <button onclick="shuffleLetters()">تغيير الأماكن</button>
-  <button id="winButton" disabled onclick="celebrate()">مبروك!</button>
-</div>
+<div id="grid" class="board"></div>
 
 <script>
-const arabicLetters="ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split('');
-let letters=[],cells=[];
-const gridEl=document.getElementById('grid');
+/* الحروف العربية الأساسية */
+const letters="ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split('');
+let cells=[];
+const grid=document.getElementById('grid');
 
-function updateQuestion(){
-  document.getElementById('questionDisplay').textContent="السؤال: "+document.getElementById('questionInput').value;
-}
-
-function shuffleLetters(){
-  const pool=[...arabicLetters];
-  for(let i=0;i<3;i++) pool.splice(Math.floor(Math.random()*pool.length),1);
-  letters=pool.sort(()=>Math.random()-0.5).slice(0,25);
-  buildGrid();
-  checkWinner();
-}
-
-function buildGrid(){
-  gridEl.innerHTML=''; cells=[];
+/* بناء السبورة */
+function build(chars){
+  grid.innerHTML=''; cells=[];
   for(let r=0;r<5;r++){
     const row=document.createElement('div');
-    row.className='hex-row'+(r%2?' offset':'');
+    row.className='row'+(r%2?' offset':'');
     for(let c=0;c<5;c++){
+      const ch=chars[r*5+c];
       const cell=document.createElement('div');
       cell.className='hex';
-      cell.textContent=letters[r*5+c];
       cell.dataset.row=r;
       cell.dataset.col=c;
-      cell.onclick=()=>{
-        if(cell.classList.contains('blue')) cell.classList.replace('blue','red');
-        else if(cell.classList.contains('red')) cell.classList.remove('red');
-        else cell.classList.add('blue');
-        checkWinner();
-      };
+
+      /* SVG داخل كل خلية – يضمن شكل سداسي مثالي وحدود متصلة */
+      cell.innerHTML=`<svg viewBox="0 0 100 86">
+        <polygon class="poly"
+                 points="25,0 75,0 100,43 75,86 25,86 0,43"
+                 fill="#fff" stroke="#000" stroke-width="2"/>
+        <text x="50" y="43">${ch}</text>
+      </svg>`;
+
+      cell.onclick=()=>toggle(cell);
       cells.push(cell);
       row.appendChild(cell);
     }
-    gridEl.appendChild(row);
+    grid.appendChild(row);
   }
 }
 
-function getColor(el){
-  return el.classList.contains('blue')?'blue':
-         el.classList.contains('red')?'red':null;
+/* تبديل اللون عند الضغط */
+function toggle(el){
+  if(el.classList.contains('blue'))      el.classList.replace('blue','red');
+  else if(el.classList.contains('red'))  el.classList.remove('red');
+  else                                   el.classList.add('blue');
 }
 
-function checkWinner(){
-  const winBtn=document.getElementById('winButton');
-  const grid=[...Array(5)].map(()=>Array(5));
-  cells.forEach(el=>grid[+el.dataset.row][+el.dataset.col]=el);
-  let win=false;
-  // أفقي
-  for(let r=0;r<5;r++){
-    const color=getColor(grid[r][0]);
-    if(color && grid[r].every(e=>e.classList.contains(color))) win=true;
-  }
-  // عمودي
-  for(let c=0;c<5;c++){
-    const col=grid.map(row=>row[c]);
-    const color=getColor(col[0]);
-    if(color && col.every(e=>e.classList.contains(color))) win=true;
-  }
-  winBtn.disabled=!win;
+/* توليد 25 حرف عشوائي (مع حذف 3 حتى يصفّي العدد) */
+function shuffle(){
+  const pool=[...letters];
+  for(let i=0;i<3;i++) pool.splice(Math.random()*pool.length|0,1);
+  const chosen=pool.sort(()=>Math.random()-0.5).slice(0,25);
+  build(chosen);
 }
 
-function celebrate(){
-  const msg=document.createElement('div');
-  msg.className='celebration';
-  msg.textContent='مبروك! الفريق الفائز أبدع!';
-  document.body.appendChild(msg);
-
-  for(let i=0;i<40;i++){
-    const spark=document.createElement('div');
-    spark.style.cssText=`
-      position:fixed;top:${Math.random()*100}vh;left:${Math.random()*100}vw;
-      width:8px;height:8px;border-radius:50%;opacity:.9;z-index:999;
-      background:${['red','yellow','orange'][Math.floor(Math.random()*3)]};
-      transition:transform 1s ease-out,opacity 1s`;
-    document.body.appendChild(spark);
-    setTimeout(()=>{spark.style.transform='scale(5) translateY(-150px)';spark.style.opacity='0'},30);
-    setTimeout(()=>spark.remove(),1000);
-  }
-  setTimeout(()=>msg.remove(),3000);
-}
-
-function createFallingLetter(){
-  const span=document.createElement('span');
-  span.className='letter';
-  span.style.left=Math.random()*100+'vw';
-  span.style.animationDuration=3+Math.random()*5+'s';
-  span.textContent=arabicLetters[Math.floor(Math.random()*arabicLetters.length)];
-  document.getElementById('falling').appendChild(span);
-  setTimeout(()=>span.remove(),8000);
-}
-setInterval(createFallingLetter,300);
-shuffleLetters();
+shuffle();   /* تشغيل أوّل مرة */
 </script>
 </body>
 </html>

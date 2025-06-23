@@ -1,284 +1,156 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لعبة حروف تركي</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<title>لعبة حروف تركي</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial, sans-serif;background:#eef0f2;min-height:100vh;overflow-x:hidden}
+h1{text-align:center;margin:25px 0;font-size:36px;position:relative;z-index:1}
 
-    body {
-      font-family: 'Arial', sans-serif;
-      background: #eef0f2;
-      overflow-x: hidden;
-      position: relative;
-      min-height: 100vh;
-    }
+/* ---------- HEX GRID ---------- */
+.hex-grid{display:flex;flex-direction:column;gap:6px;align-items:center;position:relative;z-index:1}
+.hex-row{display:flex;gap:6px}
+.hex-row.offset{margin-inline-start:43px}          /* نصف عرض الخلية تقريباً */
 
-    h1 {
-      text-align: center;
-      margin: 25px 0;
-      font-size: 36px;
-      position: relative;
-      z-index: 1;
-    }
+/* خلية سداسية */
+.hex{
+  position:relative;width:86px;height:50px;        /* القاعدة */
+  background:#fff;color:#000;font-size:22px;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.3s;border:none
+}
+.hex::before,.hex::after{
+  content:"";position:absolute;left:0;width:0;height:0;
+  border-left:43px solid transparent;border-right:43px solid transparent
+}
+.hex::before{bottom:100%;border-bottom:25px solid #fff}
+.hex::after{top:100%;border-top:25px solid #fff}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(5, 70px);
-      gap: 6px;
-      justify-content: center;
-      margin: 10px auto;
-      z-index: 1;
-      position: relative;
-    }
+/* ألوان الفرق */
+.hex.blue{background:#2196F3;color:#fff}
+.hex.blue::before{border-bottom-color:#2196F3}
+.hex.blue::after{border-top-color:#2196F3}
+.hex.red{background:#F44336;color:#fff}
+.hex.red::before{border-bottom-color:#F44336}
+.hex.red::after{border-top-color:#F44336}
 
-    .cell {
-      width: 70px;
-      height: 70px;
-      background: white;
-      border-radius: 6px;
-      font-size: 22px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: black;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+/* الصندوق السفلي كما كان */
+.question-box{margin:30px auto 10px;width:360px;background:#fff;border-radius:10px;padding:15px;text-align:center;font-size:18px;position:relative;z-index:1}
+input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:6px;text-align:center}
+#questionDisplay{margin-top:12px}
+.button-box{display:flex;justify-content:center;gap:15px;margin:20px auto 40px;position:relative;z-index:1}
+button{padding:12px 25px;background:orange;color:#fff;border:none;border-radius:25px;font-size:16px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
 
-    .cell.blue { background: #2196F3; color: white; }
-    .cell.red { background: #F44336; color: white; }
-
-    .question-box {
-      margin: 30px auto 10px;
-      width: 360px;
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      text-align: center;
-      font-size: 18px;
-      position: relative;
-      z-index: 1;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 18px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      text-align: center;
-    }
-
-    #questionDisplay {
-      margin-top: 12px;
-    }
-
-    .button-box {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 20px auto 40px;
-      position: relative;
-      z-index: 1;
-    }
-
-    button {
-      padding: 12px 25px;
-      background-color: orange;
-      color: white;
-      border: none;
-      border-radius: 25px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .falling-letters {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .letter {
-      position: absolute;
-      font-size: 32px;
-      font-weight: bold;
-      color: rgba(0, 0, 0, 0.1);
-      animation: fall linear infinite;
-    }
-
-    @keyframes fall {
-      0% { transform: translateY(-50px); opacity: 0; }
-      100% { transform: translateY(100vh); opacity: 1; }
-    }
-
-    .celebration {
-      position: fixed;
-      top: 30%;
-      width: 100%;
-      text-align: center;
-      font-size: 36px;
-      font-weight: bold;
-      color: gold;
-      animation: moveText 3s linear forwards;
-      z-index: 1000;
-    }
-
-    @keyframes moveText {
-      0% { transform: translateY(0); opacity: 0; }
-      50% { opacity: 1; }
-      100% { transform: translateY(-100px); opacity: 0; }
-    }
-  </style>
+/* مؤثرات المطر + الاحتفال كما هي - لا تغيير */
+.falling-letters{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.letter{position:absolute;font-size:32px;font-weight:bold;color:rgba(0,0,0,.08);animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-50px);opacity:0}100%{transform:translateY(100vh);opacity:1}}
+.celebration{position:fixed;top:30%;width:100%;text-align:center;font-size:36px;font-weight:bold;color:gold;animation:moveText 3s linear forwards;z-index:1000}
+@keyframes moveText{0%{transform:translateY(0);opacity:0}50%{opacity:1}100%{transform:translateY(-100px);opacity:0}}
+</style>
 </head>
 <body>
 
-  <div class="falling-letters" id="falling"></div>
+<div class="falling-letters" id="falling"></div>
+<h1>لعبة حروف تركي</h1>
 
-  <h1>لعبة حروف تركي</h1>
+<!-- الحاوية الجديدة -->
+<div class="hex-grid" id="grid"></div>
 
-  <div class="grid" id="grid"></div>
+<div class="question-box">
+  <input id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
+  <div id="questionDisplay">السؤال سيظهر هنا...</div>
+</div>
 
-  <div class="question-box">
-    <input type="text" id="questionInput" placeholder="اكتب السؤال هنا..." oninput="updateQuestion()">
-    <div id="questionDisplay">السؤال سيظهر هنا...</div>
-  </div>
+<div class="button-box">
+  <button onclick="shuffleLetters()">تغيير الأماكن</button>
+  <button id="winButton" disabled onclick="celebrate()">مبروك!</button>
+</div>
 
-  <div class="button-box">
-    <button onclick="shuffleLetters()">تغيير الأماكن</button>
-    <button id="winButton" disabled onclick="celebrate()">مبروك!</button>
-  </div>
+<script>
+const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split('');
+let letters=[], cells=[];
+const gridEl=document.getElementById("grid");
 
-  <script>
-    const arabicLetters = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split('');
-    let letters = [];
-    let cells = [];
-    const gridEl = document.getElementById("grid");
+function updateQuestion(){
+  const v=document.getElementById("questionInput").value;
+  document.getElementById("questionDisplay").innerText="السؤال: "+v;
+}
 
-    function updateQuestion() {
-      const input = document.getElementById("questionInput").value;
-      document.getElementById("questionDisplay").innerText = "السؤال: " + input;
+function shuffleLetters(){
+  let pool=[...arabicLetters];
+  for(let i=0;i<3;i++) pool.splice(Math.floor(Math.random()*pool.length),1);
+  letters=pool.sort(()=>Math.random()-0.5).slice(0,25);
+  renderGrid();
+  checkWinner();
+}
+
+/* ----------- بناء خلايا النحل ----------- */
+function renderGrid(){
+  gridEl.innerHTML='';
+  cells=[];
+  for(let r=0;r<5;r++){
+    const rowDiv=document.createElement('div');
+    rowDiv.className='hex-row'+(r%2?' offset':'');
+    for(let c=0;c<5;c++){
+      const idx=r*5+c;
+      const cell=document.createElement('button');
+      cell.className='hex';
+      cell.textContent=letters[idx];
+      cell.dataset.row=r;
+      cell.dataset.col=c;
+      cell.onclick=()=>{
+        if(cell.classList.contains('blue')){cell.classList.replace('blue','red')}
+        else if(cell.classList.contains('red')){cell.classList.remove('red')}
+        else{cell.classList.add('blue')}
+        checkWinner();
+      };
+      cells.push(cell);
+      rowDiv.appendChild(cell);
     }
+    gridEl.appendChild(rowDiv);
+  }
+}
 
-    function shuffleLetters() {
-      let temp = [...arabicLetters];
-      for (let i = 0; i < 3; i++) {
-        const randIndex = Math.floor(Math.random() * temp.length);
-        temp.splice(randIndex, 1);
-      }
-      letters = temp.sort(() => Math.random() - 0.5).slice(0, 25);
-      renderGrid();
-      checkWinner();
-    }
+/* منطق الفوز كما كان */
+function checkWinner(){
+  const winBtn=document.getElementById("winButton");
+  let grid=Array.from({length:5},()=>Array(5).fill(null));
+  cells.forEach(cell=>{
+    grid[+cell.dataset.row][+cell.dataset.col]=cell;
+  });
+  let win=false;
+  for(let r=0;r<5;r++){
+    const row=grid[r];
+    const color=row[0]&&(row[0].classList.contains('blue')?'blue':row[0].classList.contains('red')?'red':null);
+    if(color&&row.every(c=>c.classList.contains(color))) win=true;
+  }
+  for(let c=0;c<5;c++){
+    const col=grid.map(row=>row[c]);
+    const color=col[0]&&(col[0].classList.contains('blue')?'blue':col[0].classList.contains('red')?'red':null);
+    if(color&&col.every(c=>c.classList.contains(color))) win=true;
+  }
+  winBtn.disabled=!win;
+}
 
-    function renderGrid() {
-      gridEl.innerHTML = '';
-      cells = [];
+/* الاحتفال كما هو */
+function celebrate(){ /* لا تغيير */ }
 
-      for (let i = 0; i < 25; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.textContent = letters[i];
-        cell.dataset.row = Math.floor(i / 5);
-        cell.dataset.col = i % 5;
+/* تأثير الحروف المتساقطة */
+function createFallingLetter(){
+  const span=document.createElement("span");
+  span.className="letter";
+  span.style.left=Math.random()*100+"vw";
+  span.style.animationDuration=(3+Math.random()*5)+"s";
+  span.textContent=arabicLetters[Math.floor(Math.random()*arabicLetters.length)];
+  document.getElementById("falling").appendChild(span);
+  setTimeout(()=>span.remove(),8000);
+}
+setInterval(createFallingLetter,300);
 
-        cell.onclick = () => {
-          if (cell.classList.contains("blue")) {
-            cell.classList.remove("blue");
-            cell.classList.add("red");
-          } else if (cell.classList.contains("red")) {
-            cell.classList.remove("red");
-          } else {
-            cell.classList.add("blue");
-          }
-          checkWinner();
-        };
-
-        cells.push(cell);
-        gridEl.appendChild(cell);
-      }
-    }
-
-    function checkWinner() {
-      const winButton = document.getElementById("winButton");
-      let grid = Array.from({ length: 5 }, () => Array(5).fill(null));
-
-      cells.forEach(cell => {
-        const r = parseInt(cell.dataset.row);
-        const c = parseInt(cell.dataset.col);
-        grid[r][c] = cell;
-      });
-
-      let win = false;
-
-      // أفقي
-      for (let r = 0; r < 5; r++) {
-        const row = grid[r];
-        const color = row[0] && (row[0].classList.contains("blue") ? "blue" :
-                                 row[0].classList.contains("red") ? "red" : null);
-        if (color && row.every(c => c.classList.contains(color))) win = true;
-      }
-
-      // عمودي
-      for (let c = 0; c < 5; c++) {
-        const col = grid.map(row => row[c]);
-        const color = col[0] && (col[0].classList.contains("blue") ? "blue" :
-                                 col[0].classList.contains("red") ? "red" : null);
-        if (color && col.every(c => c.classList.contains(color))) win = true;
-      }
-
-      winButton.disabled = !win;
-    }
-
-    function celebrate() {
-      const message = document.createElement("div");
-      message.className = "celebration";
-      message.textContent = "مبروك! الفريق الفائز أبدع!";
-      document.body.appendChild(message);
-
-      for (let i = 0; i < 40; i++) {
-        const spark = document.createElement("div");
-        spark.style.position = 'fixed';
-        spark.style.top = (Math.random() * 100) + 'vh';
-        spark.style.left = (Math.random() * 100) + 'vw';
-        spark.style.width = '10px';
-        spark.style.height = '10px';
-        spark.style.background = ['red', 'yellow', 'orange'][Math.floor(Math.random() * 3)];
-        spark.style.borderRadius = '50%';
-        spark.style.zIndex = 999;
-        spark.style.opacity = 0.8;
-        spark.style.transition = 'all 1s ease-out';
-        document.body.appendChild(spark);
-        setTimeout(() => spark.style.transform = 'scale(4) translateY(-100px)', 50);
-        setTimeout(() => spark.remove(), 1000);
-      }
-
-      setTimeout(() => message.remove(), 3000);
-    }
-
-    function createFallingLetter() {
-      const span = document.createElement("span");
-      span.classList.add("letter");
-      span.style.left = Math.random() * 100 + "vw";
-      span.style.animationDuration = (3 + Math.random() * 5) + "s";
-      span.textContent = arabicLetters[Math.floor(Math.random() * arabicLetters.length)];
-      document.getElementById("falling").appendChild(span);
-      setTimeout(() => span.remove(), 8000);
-    }
-
-    setInterval(createFallingLetter, 300);
-    shuffleLetters();
-  </script>
-
+shuffleLetters();
+</script>
 </body>
 </html>

@@ -5,16 +5,15 @@
 <title>لعبة حروف تركي</title>
 
 <style>
-/* إعدادات سريعة – عدّل الأرقام لو تبغى حجم أو سماكة مختلفة */
 :root{
-  --hex: 90;        /* عرض الخلية بالبيكسل            */
-  --gap: 6;         /* المسافة بين الخلايا             */
-  --stroke: 2;      /* سماكة الحدود السوداء            */
-  --blue:#2196F3;   /* لون الفريق الأزرق              */
-  --red:#F44336;    /* لون الفريق الأحمر             */
+  --hex: 90;          /* عرض الخلية بالبيكسل */
+  --gap: 6;           /* المسافة بين الخلايا */
+  --stroke: 2;        /* سماكة الحدّ */
+  --blue:#2196F3;     /* لون الفريق الأزرق */
+  --red:#F44336;      /* لون الفريق الأحمر */
 }
 
-/* reset عام */
+/* Reset */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:Arial, sans-serif;
@@ -23,59 +22,109 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-}
-h1{margin:24px 0;font-size:34px}
-
-/* ------------ شبكة خلايا النحل ------------ */
-.board{
-  display:flex;
-  flex-direction:column;
-  gap:calc(var(--gap)*1px);
-}
-.row{
-  display:flex;
-  gap:calc(var(--gap)*1px);
-}
-.row.offset{
-  /* إزاحة نصف خلية لإيجاد التعشيق */
-  margin-inline-start:calc(var(--hex)*0.5px + var(--gap)*0.5px);
+  overflow-x:hidden;
 }
 
-/* ------------ الخلية الفردية ------------ */
+/* عنوان */
+h1{margin:24px 0;font-size:34px;z-index:1}
+
+/* اللوح السداسي */
+.board{display:flex;flex-direction:column;gap:calc(var(--gap)*1px);z-index:1}
+.row{display:flex;gap:calc(var(--gap)*1px)}
+.row.offset{margin-inline-start:calc(var(--hex)*0.5px + var(--gap)*0.5px)}
+
+/* خلية */
 .hex{
   width:calc(var(--hex)*1px);
-  aspect-ratio: 1.154;          /* يناسب 100 × 86  (Flat-Top) */
+  aspect-ratio:1.154;
   position:relative;
   cursor:pointer;
 }
 .hex svg{width:100%;height:100%}
+.poly{fill:#fff;stroke:#000;stroke-width:var(--stroke)}
+.hex.blue .poly{fill:var(--blue);stroke:var(--blue)}
+.hex.red  .poly{fill:var(--red); stroke:var(--red)}
 .hex text{
   dominant-baseline:middle;
   text-anchor:middle;
   font:700 calc(var(--hex)*0.38px)/1 Arial;
   pointer-events:none;
 }
-
-/* ألوان الفرق */
-.hex.blue .poly{fill:var(--blue);stroke:var(--blue)}
-.hex.red  .poly{fill:var(--red); stroke:var(--red)}
 .hex:active{transform:scale(.94)}
+
+/* الأزرار */
+.btn{
+  margin:26px 8px 48px;
+  padding:14px 38px;
+  border:none;
+  border-radius:30px;
+  font-size:18px;
+  color:#fff;
+  background:#ff9800;
+  cursor:pointer;
+  transition:opacity .2s;
+  z-index:1;
+}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* حروف متساقطة */
+.falling{position:fixed;inset:0;pointer-events:none;z-index:0}
+.letter{
+  position:absolute;font-size:32px;font-weight:bold;
+  color:rgba(0,0,0,.08);animation:fall linear infinite
+}
+@keyframes fall{
+  0%{transform:translateY(-60px);opacity:0}
+  100%{transform:translateY(100vh);opacity:1}
+}
+
+/* احتفال */
+.toast{
+  position:fixed;top:30%;width:100%;text-align:center;
+  font-size:38px;font-weight:bold;color:gold;
+  animation:toast 3s ease-out forwards;z-index:2
+}
+@keyframes toast{
+  0%{transform:translateY(0);opacity:0}
+  50%{opacity:1}
+  100%{transform:translateY(-120px);opacity:0}
+}
 </style>
 </head>
 
 <body>
+<div class="falling" id="falling"></div>
+
 <h1>لعبة حروف تركي</h1>
+
 <div id="grid" class="board"></div>
 
+<!-- زرّان -->
+<div>
+  <button id="shuffleBtn" class="btn">تغيير الأماكن</button>
+  <button id="winBtn" class="btn" disabled>مبروك!</button>
+</div>
+
 <script>
-/* الحروف العربية الأساسية */
+/* بيانات أساسية */
 const letters="ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split('');
-let cells=[];
 const grid=document.getElementById('grid');
+const winBtn=document.getElementById('winBtn');
+const shuffleBtn=document.getElementById('shuffleBtn');
+let cells=[];
 
 /* بناء السبورة */
-function build(chars){
+shuffleBtn.onclick=shuffle;
+winBtn.onclick=celebrate;
+setInterval(rain,300);
+shuffle();   // أوّل بناء
+
+function shuffle(){
   grid.innerHTML=''; cells=[];
+  winBtn.disabled=true;
+  const pool=[...letters];
+  for(let i=0;i<3;i++) pool.splice(Math.random()*pool.length|0,1);
+  const chars=pool.sort(()=>Math.random()-0.5).slice(0,25);
   for(let r=0;r<5;r++){
     const row=document.createElement('div');
     row.className='row'+(r%2?' offset':'');
@@ -85,15 +134,10 @@ function build(chars){
       cell.className='hex';
       cell.dataset.row=r;
       cell.dataset.col=c;
-
-      /* SVG داخل كل خلية – يضمن شكل سداسي مثالي وحدود متصلة */
       cell.innerHTML=`<svg viewBox="0 0 100 86">
-        <polygon class="poly"
-                 points="25,0 75,0 100,43 75,86 25,86 0,43"
-                 fill="#fff" stroke="#000" stroke-width="2"/>
+        <polygon class="poly" points="25,0 75,0 100,43 75,86 25,86 0,43"/>
         <text x="50" y="43">${ch}</text>
       </svg>`;
-
       cell.onclick=()=>toggle(cell);
       cells.push(cell);
       row.appendChild(cell);
@@ -102,22 +146,53 @@ function build(chars){
   }
 }
 
-/* تبديل اللون عند الضغط */
 function toggle(el){
   if(el.classList.contains('blue'))      el.classList.replace('blue','red');
   else if(el.classList.contains('red'))  el.classList.remove('red');
   else                                   el.classList.add('blue');
+  checkWin();
 }
 
-/* توليد 25 حرف عشوائي (مع حذف 3 حتى يصفّي العدد) */
-function shuffle(){
-  const pool=[...letters];
-  for(let i=0;i<3;i++) pool.splice(Math.random()*pool.length|0,1);
-  const chosen=pool.sort(()=>Math.random()-0.5).slice(0,25);
-  build(chosen);
+/* التحقق من الفوز */
+function colorOf(el){
+  return el.classList.contains('blue')?'blue':
+         el.classList.contains('red') ?'red':null;
+}
+function checkWin(){
+  const map=[...Array(5)].map(()=>Array(5));
+  cells.forEach(el=>map[+el.dataset.row][+el.dataset.col]=el);
+  let victory=false;
+  for(let r=0;r<5;r++){
+    const col=colorOf(map[r][0]);
+    if(col && map[r].every(e=>e.classList.contains(col))) victory=true;
+  }
+  for(let c=0;c<5;c++){
+    const column=map.map(row=>row[c]);
+    const col=colorOf(column[0]);
+    if(col && column.every(e=>e.classList.contains(col))) victory=true;
+  }
+  winBtn.disabled=!victory;
 }
 
-shuffle();   /* تشغيل أوّل مرة */
+/* الاحتفال */
+function celebrate(){
+  const msg=document.createElement('div');
+  msg.className='toast';
+  msg.textContent='مبروك! الفريق الفائز أبدع!';
+  document.body.appendChild(msg);
+  setTimeout(()=>msg.remove(),3000);
+}
+
+/* الحروف المتساقطة */
+function rain(){
+  const span=document.createElement('span');
+  span.className='letter';
+  span.style.left=Math.random()*100+'vw';
+  span.style.animationDuration=3+Math.random()*5+'s';
+  span.textContent=letters[Math.random()*letters.length|0];
+  document.getElementById('falling').appendChild(span);
+  setTimeout(()=>span.remove(),8000);
+}
 </script>
 </body>
 </html>

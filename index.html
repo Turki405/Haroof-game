@@ -5,8 +5,8 @@
 <title>لعبة حروف تركي</title>
 <style>
 :root{
-  --hex-size: 85px;          /* عرض الخلية */
-  --gap: 8px;                /* المسافة بين الخلايا */
+  --hex-size: 85px;      /* عرض الخلية – عدّل إذا تبغى */
+  --gap: 8px;            /* المسافة بين الخلايا */
   --blue:#2196F3;
   --red:#F44336;
 }
@@ -26,20 +26,27 @@ body{
 h1{margin:25px 0;font-size:34px}
 
 /* ---------- الشبكة ---------- */
-.hex-grid{display:flex;flex-direction:column;gap:var(--gap)}
+.hex-grid{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+  background:#fff;              /* يغطي الفراغات */
+  padding:var(--gap);           /* يبعدها عن الحواف */
+  border-radius:10px;
+}
 .hex-row{display:flex;gap:var(--gap)}
 .hex-row.offset{transform:translateX(calc(var(--hex-size)/2 + var(--gap)/2))}
 
 /* ---------- الخلية ---------- */
 .hex{
   width:var(--hex-size);
-  height:calc(var(--hex-size)*0.866);        /* √3/2 للنسبة الصحيحة */
+  height:calc(var(--hex-size)*0.866);
   display:flex;align-items:center;justify-content:center;
   font:bold 24px/1 Arial;
   background:#fff;color:#000;
-  cursor:pointer;
   clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
   border:2px solid #000;
+  cursor:pointer;
   transition:background .2s,border .2s;
   user-select:none;
 }
@@ -114,7 +121,7 @@ function updateQuestion(){
 
 function shuffleLetters(){
   const pool=[...arabicLetters];
-  for(let i=0;i<3;i++) pool.splice(Math.floor(Math.random()*pool.length),1); // 25 حرف
+  for(let i=0;i<3;i++) pool.splice(Math.floor(Math.random()*pool.length),1);
   letters=pool.sort(()=>Math.random()-0.5).slice(0,25);
   buildGrid();
   checkWinner();
@@ -126,11 +133,11 @@ function buildGrid(){
     const row=document.createElement('div');
     row.className='hex-row'+(r%2?' offset':'');
     for(let c=0;c<5;c++){
-      const idx=r*5+c;
       const cell=document.createElement('div');
       cell.className='hex';
-      cell.textContent=letters[idx];
-      cell.dataset.row=r; cell.dataset.col=c;
+      cell.textContent=letters[r*5+c];
+      cell.dataset.row=r;
+      cell.dataset.col=c;
       cell.onclick=()=>{
         if(cell.classList.contains('blue')) cell.classList.replace('blue','red');
         else if(cell.classList.contains('red')) cell.classList.remove('red');
